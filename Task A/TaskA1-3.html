@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<!-- Create an SVG element -->
+<svg id="scatterplot" width="1000" height="800"></svg>
+
+<script>
+    // Set up SVG
+    const svg = d3.select("#scatterplot");
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const width = +svg.attr("width") - margin.left - margin.right;
+    const height = +svg.attr("height") - margin.top - margin.bottom;
+    const g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Define scales
+    const xScale = d3.scaleLinear().range([0, width]);
+    const yScale = d3.scaleLinear().range([height, 0]);
+
+    // Define axes
+    const xAxis = d3.axisBottom(xScale);
+    const yAxis = d3.axisLeft(yScale);
+
+    // Add x axis
+    g.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    // Add y axis
+    g.append("g")
+        .call(yAxis);
+
+    // Add x axis label
+    g.append("text")
+        .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top - 10) + ")")
+        .style("text-anchor", "middle")
+        .text("Social support");
+
+    // Add y axis label
+    g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left + 10)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Happiness Index");
+
+    // Load data and draw scatterplot
+    d3.csv("http://127.0.0.1:5500/happiness_2021.csv").then(function(data) {
+        // Convert data to numbers
+        data.forEach(function(d) {
+            d.happiness_index = +d['Ladder score'];
+            d.social_support = +d['Social support'];
+        });
+
+        // Set domain for scales
+        xScale.domain(d3.extent(data, function(d) { return d.social_support; })).nice();
+        yScale.domain(d3.extent(data, function(d) { return d.happiness_index; })).nice();
+
+        // Draw circles
+        g.selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("cx", function(d) { return xScale(d.social_support); })
+            .attr("cy", function(d) { return yScale(d.happiness_index); })
+            .attr("r", 5)
+            .attr("fill", "steelblue")
+            .attr("opacity", 0.7);
+
+        // Add tooltip
+        g.selectAll("circle")
+            .on("mouseover", function(event, d) {
+                d3.select(this).attr("r", 8).attr("fill", "orange");
+                g.append("text")
+                    .attr("id", "tooltip")
+                    .attr("x", xScale(d.social_support) + 10)
+                    .attr("y", yScale(d.happiness_index) - 10)
+                    .text("(" + d.social_support + ", " + d.happiness_index + ")");
+            })
+            .on("mouseout", function(event, d) {
+                d3.select(this).attr("r", 5).attr("fill", "steelblue");
+                d3.select("#tooltip").remove();
+            });
+    });
+</script>

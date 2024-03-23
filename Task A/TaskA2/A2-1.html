@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<!-- Create an SVG element -->
+<svg id="visualization" width="800" height="600"></svg>
+
+<script>
+    // Load Airbnb dataset
+    d3.csv("http://127.0.0.1:5500/AB_NYC_2019.csv").then(function(data) {
+        // Count occurrences of each neighbourhood_group
+        const countByNeighbourhoodGroup = d3.rollup(data, v => v.length, d => d.neighbourhood_group);
+
+        // Set up SVG
+        const svg = d3.select("#visualization");
+
+        // Define shape size and color scales
+        const sizeScale = d3.scaleLinear()
+            .domain([0, d3.max(Array.from(countByNeighbourhoodGroup.values()))])
+            .range([5, 50]);
+
+        const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        // Draw shapes for each neighbourhood group
+        let yOffset = 50;
+        countByNeighbourhoodGroup.forEach(function(count, neighbourhoodGroup) {
+            const shape = svg.append("circle")
+                .attr("cx", 100)
+                .attr("cy", yOffset)
+                .attr("r", sizeScale(count))
+                .attr("fill", colorScale(neighbourhoodGroup))
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+                
+            svg.append("text")
+                .attr("x", 120)
+                .attr("y", yOffset)
+                .text(neighbourhoodGroup)
+                .attr("alignment-baseline", "middle");
+
+            yOffset += 150;
+        });
+    });
+</script>

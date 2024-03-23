@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<!-- Create an element where the map will take place -->
+<canvas id="my_dataviz" width="1400" height="800"></canvas>
+
+<script>
+    // select the canvas element created in the html.
+    const canvas = document.getElementById('my_dataviz');
+
+    // Actual width and height. No idea if clienWidth would be a better option..?
+    const width = canvas.offsetWidth;
+    const height = canvas.offsetHeight;
+
+    // Set a projection for the map. Projection = transform a lat/long on a position on the 2d map.
+    const projection = d3.geoNaturalEarth1()
+        .scale(width / 1.2 / 6)
+        .translate([width / 2, height / 2]);
+
+    // Get the 'context'
+    const ctx = canvas.getContext('2d');
+
+    // Load external data and boot
+    Promise.all([
+        // Load world map data
+        d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+        // Load happiness index data
+        d3.csv("http://127.0.0.1:5500/happiness_2021.csv", function(d) {
+            return {
+                country: d['Country name'],
+                happiness_index: +d['Social support'] // Convert happiness index to number
+            };
+        })
+    ]).then(function(data) {
+        const mapData = data[0];
+        const happinessData = data[1];
+
+        // Map happiness index data by country name
+        const happinessMap = {};
+        happinessData.forEach(function(d) {
+            happinessMap[d.country] = d.happiness_index;
+        });
+
+        // Create color scale
+        const colorScale = d3.scaleLinear()
+            .domain([d3.min(happinessData, function(d) { return d.happiness_index; }), d3.max(happinessData, function(d) { return d.happiness_index; })])
+            .range(["lightblue", "darkblue"]);
+
+        // Draw map
+        mapData.features.forEach(function(feature) {
+            const countryName = feature.properties.name;
+            const happinessIndex = happinessMap[countryName];
+
+            if (happinessIndex !== undefined) {
+                ctx.beginPath();
+                pathGenerator(feature);
+                ctx.fillStyle = colorScale(happinessIndex);
+                ctx.fill();
+                ctx.strokeStyle = "#fff"; // Add country borders
+                ctx.stroke();
+            } else {
+                // If country is not in happiness data, fill it with gray color
+                ctx.beginPath();
+                pathGenerator(feature);
+                ctx.fillStyle = "gray";
+                ctx.fill();
+                ctx.strokeStyle = "#fff"; // Add country borders
+                ctx.stroke();
+            }
+        });
+
+        // Add color legend
+        const legendWidth = 200;
+        const legendHeight = 20;
+        const legendX = width - legendWidth - 10;
+        const legendY = height - 40;
+        const gradient = ctx.createLinearGradient(legendX, legendY, legendX + legendWidth, legendY);
+        colorScale.range().forEach(function(color, i) {
+            gradient.addColorStop(i / (colorScale.range().length - 1), color);
+        });
+        ctx.fillStyle = gradient;
+        ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+
+        // Add legend labels
+        ctx.fillStyle = "black";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(d3.min(happinessData, function(d) { return d.happiness_index; }), legendX, legendY + legendHeight + 5);
+        ctx.textAlign = "center";
+        ctx.fillText("Happiness Index", legendX + legendWidth / 2, legendY + legendHeight + 5);
+        ctx.textAlign = "right";
+        ctx.fillText(d3.max(happinessData, function(d) { return d.happiness_index; }), legendX + legendWidth, legendY + legendHeight + 5);
+    });
+
+    // Function to get mouse position relative to canvas
+    function getMousePos(canvas, event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
+
+    // geographic path generator for given projection and canvas context
+    const pathGenerator = d3.geoPath(projection, ctx);
+
+</script> 

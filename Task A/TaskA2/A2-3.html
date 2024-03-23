@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- Create an SVG element -->
+<svg id="visualization" width="900" height="600"></svg>
+<script>
+    // Load Airbnb dataset
+    d3.csv("http://127.0.0.1:5500/AB_NYC_2019.csv").then(function(data) {
+        // Convert price to numbers
+        data.forEach(function(d) {
+            d.price = +d.price;
+        });
+        // Count occurrences of prices in each interval
+        const priceIntervals = d3.range(0, 1001, 50);
+        const counts = Array(priceIntervals.length).fill(0);
+        data.forEach(function(d) {
+            for (let i = 0; i < priceIntervals.length - 1; i++) {
+                if (d.price >= priceIntervals[i] && d.price < priceIntervals[i + 1]) {
+                    counts[i]++;
+                    break;
+                }
+            }
+        });
+        // Set up SVG
+        const margin = {top: 20, right: 30, bottom: 40, left: 80};
+        const width = 800 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+        const svg = d3.select("#visualization")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // Define scales
+        const xScale = d3.scaleBand()
+            .domain(priceIntervals.map(String)) // Convert numbers to strings
+            .range([0, width])
+            .padding(0.1);
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(counts)])
+            .nice()
+            .range([height, 0]);
+        // Draw histogram bars
+        svg.selectAll("rect")
+            .data(counts)
+            .enter()
+            .append("rect")
+            .attr("x", function(d, i) { return xScale(String(priceIntervals[i])); })
+            .attr("y", function(d) { return yScale(d); })
+            .attr("width", xScale.bandwidth())
+            .attr("height", function(d) { return height - yScale(d); })
+            .attr("fill", "steelblue");
+        // Add x-axis
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(xScale));
+        // Add y-axis
+        svg.append("g")
+            .call(d3.axisLeft(yScale));
+        // Add x-axis label
+        svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top + 20) + ")")
+            .style("text-anchor", "middle")
+            .text("Price Interval");
+        // Add y-axis label
+        svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Number of Hotels");
+    });
+</script>
