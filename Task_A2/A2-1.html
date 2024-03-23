@@ -9,7 +9,7 @@
 
 <script>
     // Load Airbnb dataset
-    d3.csv("http://127.0.0.1:5500/AB_NYC_2019.csv").then(function(data) {
+    d3.csv("http://127.0.0.1:5500/Task_A2/AB_NYC_2019.csv").then(function(data) {
         // Count occurrences of each neighbourhood_group
         const countByNeighbourhoodGroup = d3.rollup(data, v => v.length, d => d.neighbourhood_group);
 

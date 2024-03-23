@@ -47,7 +47,7 @@
         .text("Happiness Index");
 
     // Load data and draw scatterplot
-    d3.csv("http://127.0.0.1:5500/happiness_2021.csv").then(function(data) {
+    d3.csv("http://127.0.0.1:5500/Task_A1/happiness_2021.csv").then(function(data) {
         // Convert data to numbers
         data.forEach(function(d) {
             d.happiness_index = +d['Ladder score'];
