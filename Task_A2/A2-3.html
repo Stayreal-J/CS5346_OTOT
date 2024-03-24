@@ -6,7 +6,7 @@
 <svg id="visualization" width="900" height="600"></svg>
 <script>
     // Load Airbnb dataset
-    d3.csv("http://127.0.0.1:5500/Task_A2/AB_NYC_2019.csv").then(function(data) {
+    d3.csv("https://raw.githubusercontent.com/Stayreal-J/CS5346_OTOT/main/Task_A2/AB_NYC_2019.csv").then(function(data) {
         // Convert price to numbers
         data.forEach(function(d) {
             d.price = +d.price;

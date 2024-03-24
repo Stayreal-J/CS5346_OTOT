@@ -28,7 +28,7 @@
         // Load world map data
         d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
         // Load happiness index data
-        d3.csv("http://127.0.0.1:5500/Task_A1/happiness_2021.csv", function(d) {
+        d3.csv("https://raw.githubusercontent.com/Stayreal-J/CS5346_OTOT/main/Task_A1/happiness_2021.csv", function(d) {
             return {
                 country: d['Country name'],
                 happiness_index: +d['Social support'] // Convert happiness index to number
