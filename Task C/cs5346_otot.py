@@ -6,7 +6,7 @@ import os
 
 file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'online_course.csv')
 
-df = pd.read_csv(file_pathtest1)
+df = pd.read_csv(file_path)
 df.dropna(axis=0)
 df.drop_duplicates()
 df['Launch Date'] = [datetime.strptime(date, '%m/%d/%Y').year for date in df['Launch Date']]
